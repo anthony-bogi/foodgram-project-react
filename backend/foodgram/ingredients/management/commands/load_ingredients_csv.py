@@ -1,7 +1,7 @@
 import os
 import csv
 from django.core.management.base import BaseCommand
-from recipes.models import Ingredient
+from ingredients.models import Ingredient
 from foodgram import settings
 
 

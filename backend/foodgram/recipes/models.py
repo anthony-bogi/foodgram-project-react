@@ -1,66 +1,9 @@
 from django.db import models
+from django.core.validators import MinValueValidator
+
 from users.models import User
-from django.core.validators import MinValueValidator, RegexValidator
-
-
-class Ingredient(models.Model):
-    """Our ingredient model."""
-    name = models.CharField(
-        verbose_name='название',
-        max_length=200
-    )
-    measurement_unit = models.CharField(
-        verbose_name='единица измерения',
-        max_length=200
-    )
-
-    class Meta:
-        ordering = ('name',)
-        verbose_name = 'Ингредиент'
-        verbose_name_plural = 'Ингредиенты'
-
-    def __str__(self):
-        return f'{self.name}, {self.measurement_unit}'
-
-
-class Tag(models.Model):
-    """Our tag model."""
-    name = models.CharField(
-        verbose_name='название',
-        max_length=200,
-        unique=True
-    )
-    color = models.CharField(
-        verbose_name='цвет в HEX',
-        max_length=7,
-        unique=True,
-        validators=[
-            RegexValidator(
-                regex='^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$',
-                message='Введите значение в формате HEX'
-            )
-        ],
-        default='#ffffff'
-    )
-    slug = models.SlugField(
-        verbose_name='уникальный слаг',
-        max_length=200,
-        unique=True,
-        validators=[
-            RegexValidator(
-                regex='^[-a-zA-Z0-9_]+$',
-                message='Введите уникальный слаг'
-            )
-        ]
-    )
-
-    class Meta:
-        ordering = ('id',)
-        verbose_name = 'Тег'
-        verbose_name_plural = 'Теги'
-
-    def __str__(self):
-        return self.name
+from ingredients.models import Ingredient
+from tags.models import Tag
 
 
 class Recipe(models.Model):
@@ -78,7 +21,7 @@ class Recipe(models.Model):
     image = models.ImageField(
         verbose_name='изображение',
         blank=True,
-        upload_to='recipes/'
+        upload_to='recipes/images'
     )
     text = models.TextField(
         verbose_name='текстовое описание',
@@ -87,7 +30,7 @@ class Recipe(models.Model):
         Ingredient,
         verbose_name='ингредиенты',
         through='Ingredients',
-        related_name='recipes',
+        related_name='recipes'
     )
     tags = models.ManyToManyField(
         Tag,
@@ -146,7 +89,7 @@ class Ingredients(models.Model):
 
 
 class Favorites(models.Model):
-    """Our favorites model."""
+    """Our favorites of recipes model."""
     user = models.ForeignKey(
         User,
         verbose_name='пользователь',
@@ -175,7 +118,7 @@ class Favorites(models.Model):
 
 
 class ShoppingList(models.Model):
-    """Our shopping list model."""
+    """Our shopping list of recipes model."""
     user = models.ForeignKey(
         User,
         verbose_name='пользователь',
@@ -201,4 +144,3 @@ class ShoppingList(models.Model):
     
     def __str__(self):
         return f'{self.user} добавил рецепт "{self.recipe}" в Список своих покупок.'
-

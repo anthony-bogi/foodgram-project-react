@@ -1,6 +1,13 @@
 from django.contrib import admin
 
-from .models import Recipe, Ingredients, Ingredient, Tag, Favorites, ShoppingList
+from .models import Recipe, Ingredients, Favorites, ShoppingList
+
+
+class IngredientsAdminInline(admin.TabularInline):
+    """Class for displaying ingredients when creating a recipe in the admin panel."""
+    model = Ingredients
+    can_delete = True
+    extra = 1
 
 
 @admin.register(Recipe)
@@ -18,6 +25,7 @@ class AdminRecipe(admin.ModelAdmin):
     empty_value_display = '--пусто--'
     search_fields = ('name', 'author', 'tags', 'cooking_time',)
     filter_horizontal = ('tags',)
+    inlines = (IngredientsAdminInline,)
 
     @admin.display(description='Количество в избранном')
     def favorites_amount(self, obj):
@@ -37,31 +45,6 @@ class AdminIngredients(admin.ModelAdmin):
     search_fields = ('recipe', 'ingredient',)
 
 
-@admin.register(Ingredient)
-class AdminIngredient(admin.ModelAdmin):
-    """Our model for ingredient in the admin panel."""
-    list_display = (
-        'id',
-        'name',
-        'measurement_unit',
-    )
-    list_filter = ('name',)
-    search_fields = ('name',)
-
-
-@admin.register(Tag)
-class AdminTag(admin.ModelAdmin):
-    """Our model for tag in the admin panel."""
-    list_display = (
-        'id',
-        'name',
-        'color',
-        'slug',
-    )
-    list_filter = ('name', 'slug',)
-    search_fields = ('name', 'slug',)
-
-
 @admin.register(Favorites)
 class AdminFavorites(admin.ModelAdmin):
     """Our model for favorites in the admin panel."""
@@ -72,6 +55,7 @@ class AdminFavorites(admin.ModelAdmin):
     )
     list_filter = ('user', 'recipe',)
     search_fields = ('user', 'recipe',)
+
 
 @admin.register(ShoppingList)
 class AdminShoppingList(admin.ModelAdmin):
