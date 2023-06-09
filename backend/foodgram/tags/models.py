@@ -7,7 +7,8 @@ class Tag(models.Model):
     name = models.CharField(
         verbose_name='название',
         max_length=200,
-        unique=True
+        unique=True,
+        help_text='Название тега'
     )
     color = models.CharField(
         verbose_name='цвет в HEX',
@@ -19,7 +20,8 @@ class Tag(models.Model):
                 message='Введите значение в формате HEX'
             )
         ],
-        default='#ffffff'
+        default='#ffffff',
+        help_text='Цвет в формате HEX, который будет относится к данному тегу'
     )
     slug = models.SlugField(
         verbose_name='уникальный слаг',
@@ -30,7 +32,8 @@ class Tag(models.Model):
                 regex='^[-a-zA-Z0-9_]+$',
                 message='Введите уникальный слаг'
             )
-        ]
+        ],
+        help_text='Уникальное имя-слаг для данного тега'
     )
 
     class Meta:

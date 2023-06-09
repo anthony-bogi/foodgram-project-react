@@ -5,11 +5,13 @@ class Ingredient(models.Model):
     """Our ingredient model."""
     name = models.CharField(
         verbose_name='название',
-        max_length=200
+        max_length=200,
+        help_text='Название ингредиента'
     )
     measurement_unit = models.CharField(
         verbose_name='единица измерения',
-        max_length=200
+        max_length=200,
+        help_text='Единица измерения данного ингредиента'
     )
 
     class Meta:

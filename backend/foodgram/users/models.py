@@ -11,24 +11,29 @@ class User(AbstractUser):
     email = models.EmailField(
         verbose_name='адрес электронной почты (email)',
         max_length=254,
-        unique=True
+        unique=True,
+        help_text='Электронный адрес, с которым будет связана учетная запись пользователя'
     )
     username = models.CharField(
         verbose_name='имя пользователя (логин)',
         max_length=150,
-        unique=True
+        unique=True,
+        help_text='Имя пользователя, под которым будут видны рецепты и комментарии'
     )
     first_name = models.CharField(
         verbose_name='имя',
         max_length=150,
+        help_text='Имя пользователя'
     )
     last_name = models.CharField(
         verbose_name='фамилия',
         max_length=150,
+        help_text='Фамилия пользователя'
     )
     password = models.CharField(
         verbose_name='пароль',
-        max_length=150
+        max_length=150,
+        help_text='Пароль от учетной записи'
     )
     role = models.CharField(
         verbose_name='пользовательская роль',
@@ -36,7 +41,8 @@ class User(AbstractUser):
         choices=CHOICES,
         default='user',
         blank=True,
-        null=True
+        null=True,
+        help_text='Роль зарегистрированного пользователя'
     )
 
     USERNAME_FIELD = 'email'
