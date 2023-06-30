@@ -1,10 +1,10 @@
 from django.contrib import admin
 
-from .models import User
+from .models import User, Subscribe
 
 @admin.register(User)
 class AdminUser(admin.ModelAdmin):
-    """Our model for users in the admin panel."""
+    """Наша модель для пользователей в админке."""
     list_display = (
         'id',
         'username',
@@ -16,3 +16,17 @@ class AdminUser(admin.ModelAdmin):
     list_filter = ('email', 'username',)
     empty_value_display = '--пусто--'
     search_fields = ('username', 'email', 'first_name', 'last_name',)
+
+
+@admin.register(Subscribe)
+class AdminSubscribe(admin.ModelAdmin):
+    """Наша модель для подписок в админке."""
+    list_display = (
+        'id',
+        'user',
+        'author',
+        'created_at',
+    )
+    list_filter = ('user',)
+    empty_value_display = '--пусто--'
+    search_fields = ('user',)

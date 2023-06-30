@@ -3,7 +3,7 @@ from django.db import models
 
 
 class User(AbstractUser):
-    """Our extended model of work with users."""
+    """Наша расширенная модель работы с пользователями."""
     CHOICES = (
         ('user', 'user'),
         ('admin', 'admin'),
@@ -49,9 +49,51 @@ class User(AbstractUser):
     REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
 
     class Meta:
+        ordering = ('id',)
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
-        ordering = ('id',)
 
     def __str__(self) -> str:
         return self.username
+
+
+class Subscribe(models.Model):
+    """Наша модель для подписки на пользователя."""
+    id = models.AutoField(
+        primary_key=True,
+        verbose_name="ID",
+        help_text='Уникальный идентификатор ID'
+    )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='subscribing',
+        verbose_name="Подписчик",
+        help_text='Имя пользователя, кто подписывается'
+    )
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='subscribers',
+        verbose_name="Автор",
+        help_text='Имя пользователя, на кого подписываются'
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="Дата подписки",
+        help_text='Дата и время подписки'
+    )
+
+    class Meta:
+        verbose_name = "Подписка"
+        verbose_name_plural = "Подписки"
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'author'],
+                name='unique_subscribe'
+            )
+        ]
+
+    def __str__(self):
+        return f'{self.user.email} подписан на {self.author.email}'

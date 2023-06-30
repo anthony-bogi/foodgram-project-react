@@ -26,7 +26,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'api.apps.ApiConfig',
     'users.apps.UsersConfig',
     'recipes.apps.RecipesConfig',
     'ingredients.apps.IngredientsConfig',
@@ -130,4 +129,10 @@ REST_FRAMEWORK = {
     ],
 }
 
-
+DJOSER = {
+    'SERIALIZERS': {
+        'user_create': 'users.serializers.OurUserCreateSerializer',
+        # 'user': 'users.serializers.OurUserSerializer',
+        # 'current_user': 'users.serializers.OurUserSerializer',
+    },
+}
