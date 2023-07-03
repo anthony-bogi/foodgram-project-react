@@ -5,7 +5,7 @@ from .models import Tag
 
 @admin.register(Tag)
 class AdminTag(admin.ModelAdmin):
-    """Our model for tag in the admin panel."""
+    """Наша модель для тега в админке."""
     list_display = (
         'id',
         'name',

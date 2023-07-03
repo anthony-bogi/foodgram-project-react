@@ -2,7 +2,7 @@ from django.db import models
 
 
 class Ingredient(models.Model):
-    """Our ingredient model."""
+    """Наша модель ингредиентов."""
     name = models.CharField(
         verbose_name='название',
         max_length=200,
@@ -15,7 +15,7 @@ class Ingredient(models.Model):
     )
 
     class Meta:
-        ordering = ('name',)
+        ordering = ('id',)
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'Ингредиенты'
 

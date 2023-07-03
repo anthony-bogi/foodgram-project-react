@@ -7,7 +7,7 @@ from tags.models import Tag
 
 
 class Recipe(models.Model):
-    """Our recipe model."""
+    """Наша модель рецепта."""
     author = models.ForeignKey(
         User,
         verbose_name='автор публикации (пользователь)',
@@ -39,9 +39,9 @@ class Recipe(models.Model):
     )
     tags = models.ManyToManyField(
         Tag,
-        verbose_name='тег',
+        verbose_name='теги',
         related_name='recipes',
-        help_text='Тег к рецепту'
+        help_text='Тег/теги к рецепту'
     )
     cooking_time = models.PositiveIntegerField(
         verbose_name='время приготовления в минутах',

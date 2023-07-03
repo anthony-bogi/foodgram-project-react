@@ -3,7 +3,7 @@ from django.core.validators import RegexValidator
 
 
 class Tag(models.Model):
-    """Our tag model."""
+    """Наша модель тега."""
     name = models.CharField(
         verbose_name='название',
         max_length=200,
@@ -13,7 +13,7 @@ class Tag(models.Model):
     color = models.CharField(
         verbose_name='цвет в HEX',
         max_length=7,
-        unique=True,
+        unique=True, # unique??
         validators=[
             RegexValidator(
                 regex='^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$',
