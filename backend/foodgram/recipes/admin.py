@@ -4,7 +4,7 @@ from .models import Recipe, Ingredients, Favorites, ShoppingList
 
 
 class IngredientsAdminInline(admin.TabularInline):
-    """Class for displaying ingredients when creating a recipe in the admin panel."""
+    """Класс для отображения ингредиентов при создании рецепта в админке."""
     model = Ingredients
     can_delete = True
     extra = 1
@@ -12,7 +12,7 @@ class IngredientsAdminInline(admin.TabularInline):
 
 @admin.register(Recipe)
 class AdminRecipe(admin.ModelAdmin):
-    """Our model for recipes in the admin panel."""
+    """Наша модель для рецептов в админке."""
     list_display = (
         'id',
         'name',
@@ -34,7 +34,7 @@ class AdminRecipe(admin.ModelAdmin):
 
 @admin.register(Ingredients)
 class AdminIngredients(admin.ModelAdmin):
-    """Our model for ingredients in recipe in the admin panel."""
+    """Наша модель для ингредиентов в рецепте в админке."""
     list_display = (
         'id',
         'recipe',
@@ -47,7 +47,7 @@ class AdminIngredients(admin.ModelAdmin):
 
 @admin.register(Favorites)
 class AdminFavorites(admin.ModelAdmin):
-    """Our model for favorites in the admin panel."""
+    """Наша модель для избранного в админке."""
     list_display = (
         'id',
         'user',
@@ -59,7 +59,7 @@ class AdminFavorites(admin.ModelAdmin):
 
 @admin.register(ShoppingList)
 class AdminShoppingList(admin.ModelAdmin):
-    """Our model for shopping list in the admin panel."""
+    """Наша модель списка покупок в админке."""
     list_display = (
         'id',
         'user',

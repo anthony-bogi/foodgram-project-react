@@ -18,13 +18,13 @@ class Recipe(models.Model):
     name = models.CharField(
         verbose_name='название',
         max_length=200,
-        help_text='Название рецепта'
+        help_text='Название блюда'
     )
     image = models.ImageField(
         verbose_name='изображение',
         blank=True,
         upload_to='recipes/images',
-        help_text='Красивый рисунок к рецепту'
+        help_text='Красивый рисунок, иллюстрирующий рецепт'
     )
     text = models.TextField(
         verbose_name='текстовое описание',
@@ -35,7 +35,7 @@ class Recipe(models.Model):
         verbose_name='ингредиенты',
         through='Ingredients',
         related_name='recipes',
-        help_text='Ингредиенты, используемые в рецепте'
+        help_text='Список продуктов (ингредиентов), используемых в блюде'
     )
     tags = models.ManyToManyField(
         Tag,
@@ -48,7 +48,7 @@ class Recipe(models.Model):
         validators=[
             MinValueValidator(1, message='Введите время в минутах >=1.')
         ],
-        help_text='Время, затрачиваемое на приготовление блюда в минутах'
+        help_text='Время, необходимое для приготовления блюда в минутах'
     )
 
     class Meta:
@@ -67,7 +67,7 @@ class Recipe(models.Model):
 
 
 class Ingredients(models.Model):
-    """Our ingredients in recipe model."""
+    """Наша модель ингредиентов в рецепте."""
     recipe = models.ForeignKey(
         Recipe,
         verbose_name='рецепт',
@@ -99,13 +99,13 @@ class Ingredients(models.Model):
 
 
 class Favorites(models.Model):
-    """Our favorites of recipes model."""
+    """Наша модель для избранных рецептов."""
     user = models.ForeignKey(
         User,
         verbose_name='пользователь',
         on_delete=models.CASCADE,
         related_name='favorites',
-        help_text='Автор данного рецепта'
+        help_text='Пользователь, добавивший рецепт в избранное'
     )
     recipe = models.ForeignKey(
         Recipe,
@@ -130,13 +130,13 @@ class Favorites(models.Model):
 
 
 class ShoppingList(models.Model):
-    """Our shopping list of recipes model."""
+    """Наша модель для списка покупок."""
     user = models.ForeignKey(
         User,
         verbose_name='пользователь',
         on_delete=models.CASCADE,
         related_name='shopping_list',
-        help_text='Автор, кто добавляет рецепт в список покупок'
+        help_text='Пользователь, кто добавляет рецепт в список покупок'
     )
     recipe = models.ForeignKey(
         Recipe,
