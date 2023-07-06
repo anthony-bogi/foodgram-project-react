@@ -1,3 +1,10 @@
+from io import BytesIO
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from collections import defaultdict
+from django.http import HttpResponse
 from rest_framework import status, viewsets, permissions
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
@@ -26,7 +33,8 @@ class OurRecipeViewSet(viewsets.ReadOnlyModelViewSet):
             'create_favorite',
             'delete_favorite',
             'create_shopping_list',
-            'delete_shopping_list'
+            'delete_shopping_list',
+            'download_shopping_list'
         ]:
             permission_classes = [permissions.IsAuthenticated]
         else:
@@ -129,3 +137,46 @@ class OurRecipeViewSet(viewsets.ReadOnlyModelViewSet):
             )
         shopping_list.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+    
+    def download_shopping_list(self, request):
+        user = self.get_serializer_context()['request'].user
+        shopping_list = ShoppingList.objects.filter(user=user)
+        if not shopping_list.exists():
+            return HttpResponse("Список покупок пуст.")
+        ingredients = Ingredients.objects.filter(recipe__shopping_list__in=shopping_list).values('ingredient__name', 'amount', 'ingredient__measurement_unit')
+        ingredient_totals = defaultdict(float)
+                
+        for ingredient in ingredients:
+            ingredient_name = ingredient['ingredient__name']
+            ingredient_quantity = ingredient['amount']
+            ingredient_unit = ingredient['ingredient__measurement_unit']
+            ingredient_totals[ingredient_name] += ingredient_quantity
+        
+        pdf_buffer = BytesIO()
+
+        p = canvas.Canvas(pdf_buffer, pagesize=letter)
+
+        try:
+            pdfmetrics.registerFont(TTFont('Arial', 'C:/WINDOWS/FONTS/ARIAL.ttf'))
+            p.setFont("Arial", 12)
+        except:
+            p.setFont("Helvetica", 12)
+        
+        p.drawString(100, 750, "Список покупок")
+
+        y = 700
+
+        for ingredient_name, ingredient_quantity in ingredient_totals.items():
+            ingredient_unit = Ingredients.objects.filter(ingredient__name=ingredient_name).first().ingredient.measurement_unit
+            p.drawString(100, y, f"{ingredient_name}: {ingredient_quantity} {ingredient_unit}")
+            y -= 20
+        
+        p.showPage()
+        p.save()
+
+        pdf_buffer.seek(0)
+
+        response = HttpResponse(pdf_buffer, content_type='application/pdf')
+        response['Content-Disposition'] = 'attachment; filename="shopping_list.pdf"'
+
+        return response

@@ -2,12 +2,9 @@ from rest_framework import serializers
 from django.db.models import F
 from drf_extra_fields.fields import Base64ImageField
 
-from recipes.models import Recipe, Ingredients
-from ingredients.models import Ingredient
+from recipes.models import Recipe
 from tags.models import Tag
-from users.models import User
 
-from ingredients.serializers import OurIngredientSerializer
 from tags.serializers import OurTagSerializer
 from users.serializers import OurUserSerializer
 
@@ -79,7 +76,7 @@ class OurRecipeCreateSerializer(serializers.ModelSerializer):
     text = serializers.CharField()
     cooking_time = serializers.IntegerField(
         min_value=1,
-        error_messages={'min_value': 'Время приготовления должно быть больше или равно 1.'}
+        error_messages={'min_value': 'Время приготовления должно быть >= 1.'}
     )
 
     class Meta:
@@ -112,7 +109,7 @@ class OurRecipeCreateOutputSerializer(serializers.ModelSerializer):
     tags = OurTagSerializer(
         many=True
     )
-    author = author = OurUserSerializer(
+    author = OurUserSerializer(
         default=serializers.CurrentUserDefault()
     )
     ingredients = serializers.SerializerMethodField()
@@ -130,7 +127,7 @@ class OurRecipeCreateOutputSerializer(serializers.ModelSerializer):
     text = serializers.CharField()
     cooking_time = serializers.IntegerField(
         min_value=1,
-        error_messages={'min_value': 'Время приготовления должно быть больше или равно 1.'}
+        error_messages={'min_value': 'Время приготовления должно быть >= 1.'}
     )
 
     class Meta:
