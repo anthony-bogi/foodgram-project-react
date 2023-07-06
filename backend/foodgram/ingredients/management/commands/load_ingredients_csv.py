@@ -2,15 +2,14 @@ import os
 import csv
 from django.core.management.base import BaseCommand
 from ingredients.models import Ingredient
-from foodgram import settings
 
 
 class Command(BaseCommand):
-    """Imports ingredients data from a *.csv-file."""
+    """Импортирует данные об ингредиентах из *.csv-файла."""
 
     def handle(self, *args, **options):
         file_name = 'ingredients.csv'
-        file_path = os.path.abspath(os.path.join(os.path.dirname( __file__ ), os.pardir, os.pardir, os.pardir, os.pardir, os.pardir, 'data', file_name))
+        file_path = os.path.join(os.path.dirname(__file__), *([os.pardir] * 6), 'data', file_name)
         if Ingredient.objects.exists():
             self.stderr.write('Данные об ингредиентах уже загружены.')
             return
