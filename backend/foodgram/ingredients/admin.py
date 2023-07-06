@@ -5,7 +5,7 @@ from .models import Ingredient
 
 @admin.register(Ingredient)
 class AdminIngredient(admin.ModelAdmin):
-    """Our model for ingredient in the admin panel."""
+    """Наша модель для ингредиента в админке."""
     list_display = (
         'id',
         'name',
