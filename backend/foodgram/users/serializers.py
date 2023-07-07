@@ -125,8 +125,8 @@ class OurSubscriptionSerializer(UserSerializer):
 
     def get_recipes(self, obj):
         max_recipes = self.context['request'].GET.get('recipes_limit')
+        queryset = obj.recipes.all()
         if max_recipes:
-            recipes = obj.recipes.all()[:int(max_recipes)]
-        else:
-            recipes = obj.rec.all()
-        return OurSubscriptionRecipeSerializer(recipes, many=True).data
+            max_recipes = int(max_recipes)
+            queryset = queryset[:max_recipes]
+        return OurSubscriptionRecipeSerializer(queryset, many=True).data
