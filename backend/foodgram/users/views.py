@@ -1,5 +1,5 @@
 from django.shortcuts import get_object_or_404
-from rest_framework import mixins, permissions, status, viewsets
+from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
@@ -71,7 +71,9 @@ class OurUserViewSet(viewsets.GenericViewSet):
     def subscribe(self, request, pk):
         author = get_object_or_404(User, id=pk)
         subscription = Subscribe.objects.filter(
-            user=request.user, author=author)
+            user=request.user,
+            author=author
+        )
 
         if request.method == 'DELETE':
             if not subscription:
