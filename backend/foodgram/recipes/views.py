@@ -1,20 +1,26 @@
+from collections import defaultdict
 from io import BytesIO
+
+from django.http import HttpResponse
 from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from collections import defaultdict
-from django.http import HttpResponse
-from rest_framework import status, viewsets, permissions
+from reportlab.pdfgen import canvas
+from rest_framework import permissions, status, viewsets
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
-from .models import Recipe, Ingredients, Favorites, ShoppingList
-from .serializers import (OurRecipeSerializer,
-                          OurRecipeCreateSerializer,
-                          OurRecipeCreateOutputSerializer,
-                          OurFavoritesSLRecipeSerializer)
 from ingredients.models import Ingredient
+
+from .models import Favorites, Ingredients, Recipe, ShoppingList
+from .serializers import (OurFavoritesSLRecipeSerializer,
+                          OurRecipeCreateOutputSerializer,
+                          OurRecipeCreateSerializer, OurRecipeSerializer)
+
+
+class MissingFontError(Exception):
+    """Искллючение, если в системе отсутсвует опредленный шрифт."""
+    pass
 
 
 class OurRecipeViewSet(viewsets.ReadOnlyModelViewSet):
@@ -42,9 +48,8 @@ class OurRecipeViewSet(viewsets.ReadOnlyModelViewSet):
         return [permission() for permission in permission_classes]
 
     def get_queryset(self):
-        queryset = super().get_queryset()
-        return queryset
-    
+        return super().get_queryset()
+
     def create(self, request, *args, **kwargs):
         create_serializer = OurRecipeCreateSerializer(data=request.data)
         create_serializer.is_valid(raise_exception=True)
@@ -58,7 +63,11 @@ class OurRecipeViewSet(viewsets.ReadOnlyModelViewSet):
                 ingredient_id = ingredient_data.get('id')
                 amount = ingredient_data.get('amount')
                 ingredient = Ingredient.objects.get(id=ingredient_id)
-                Ingredients.objects.create(recipe=recipe, ingredient=ingredient, amount=amount)
+                Ingredients.objects.create(
+                    recipe=recipe,
+                    ingredient=ingredient,
+                    amount=amount
+                )
         output_serializer = OurRecipeCreateOutputSerializer(
             recipe,
             context={'request': request}
@@ -72,7 +81,11 @@ class OurRecipeViewSet(viewsets.ReadOnlyModelViewSet):
                 {"error": "Вы не являетесь автором этого рецепта."},
                 status=status.HTTP_403_FORBIDDEN
             )
-        serializer = OurRecipeCreateSerializer(instance, data=request.data, partial=True)
+        serializer = OurRecipeCreateSerializer(
+            instance,
+            data=request.data,
+            partial=True
+        )
         serializer.is_valid(raise_exception=True)
         serializer.save()
         output_serializer = OurRecipeCreateOutputSerializer(
@@ -84,15 +97,18 @@ class OurRecipeViewSet(viewsets.ReadOnlyModelViewSet):
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         if instance.author != self.request.user:
-            return Response({"error": "Вы не являетесь автором этого рецепта."}, status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {"error": "Вы не являетесь автором этого рецепта."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-    
+
     def create_favorite(self, request, *args, **kwargs):
-        recipe_id = kwargs.get('pk')
         recipe = self.get_object()
         user = request.user
-        favorite, created = Favorites.objects.get_or_create(user=user, recipe=recipe)
+        favorite, created = Favorites.objects.get_or_create(user=user,
+                                                            recipe=recipe)
         if not created:
             return Response(
                 {"error": "Рецепт уже добавлен в избранное."},
@@ -100,9 +116,8 @@ class OurRecipeViewSet(viewsets.ReadOnlyModelViewSet):
             )
         serializer = OurFavoritesSLRecipeSerializer(recipe)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-    
+
     def delete_favorite(self, request, *args, **kwargs):
-        recipe_id = kwargs.get('pk')
         recipe = self.get_object()
         user = request.user
         favorites = Favorites.objects.filter(user=user, recipe=recipe)
@@ -113,11 +128,14 @@ class OurRecipeViewSet(viewsets.ReadOnlyModelViewSet):
             )
         favorites.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-    
+
     def create_shopping_list(self, request, *args, **kwargs):
         recipe = self.get_object()
         user = request.user
-        shopping_list, created = ShoppingList.objects.get_or_create(user=user, recipe=recipe)
+        shopping_list, created = ShoppingList.objects.get_or_create(
+            user=user,
+            recipe=recipe
+        )
         if not created:
             return Response(
                 {"error": "Рецепт уже добавлен в список покупок."},
@@ -125,7 +143,7 @@ class OurRecipeViewSet(viewsets.ReadOnlyModelViewSet):
             )
         serializer = OurFavoritesSLRecipeSerializer(recipe)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-    
+
     def delete_shopping_list(self, request, *args, **kwargs):
         recipe = self.get_object()
         user = request.user
@@ -137,46 +155,61 @@ class OurRecipeViewSet(viewsets.ReadOnlyModelViewSet):
             )
         shopping_list.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-    
+
     def download_shopping_list(self, request):
         user = self.get_serializer_context()['request'].user
         shopping_list = ShoppingList.objects.filter(user=user)
         if not shopping_list.exists():
             return HttpResponse("Список покупок пуст.")
-        ingredients = Ingredients.objects.filter(recipe__shopping_list__in=shopping_list).values('ingredient__name', 'amount', 'ingredient__measurement_unit')
+        ingredients = (Ingredients.objects
+                       .filter(recipe__shopping_list__in=shopping_list)
+                       .values('ingredient__name',
+                               'amount',
+                               'ingredient__measurement_unit'))
         ingredient_totals = defaultdict(float)
-                
+
         for ingredient in ingredients:
             ingredient_name = ingredient['ingredient__name']
             ingredient_quantity = ingredient['amount']
             ingredient_unit = ingredient['ingredient__measurement_unit']
             ingredient_totals[ingredient_name] += ingredient_quantity
-        
+
         pdf_buffer = BytesIO()
 
         p = canvas.Canvas(pdf_buffer, pagesize=letter)
 
         try:
-            pdfmetrics.registerFont(TTFont('Arial', 'C:/WINDOWS/FONTS/ARIAL.ttf'))
+            pdfmetrics.registerFont(TTFont(
+                'Arial',
+                'C:/WINDOWS/FONTS/ARIAL.ttf')
+            )
             p.setFont("Arial", 12)
-        except:
+        except MissingFontError:
             p.setFont("Helvetica", 12)
-        
+
         p.drawString(100, 750, "Список покупок")
 
         y = 700
 
         for ingredient_name, ingredient_quantity in ingredient_totals.items():
-            ingredient_unit = Ingredients.objects.filter(ingredient__name=ingredient_name).first().ingredient.measurement_unit
-            p.drawString(100, y, f"{ingredient_name}: {ingredient_quantity} {ingredient_unit}")
+            ingredient_unit = (
+                Ingredients.objects.filter(ingredient__name=ingredient_name)
+                .first()
+                .ingredient.measurement_unit
+            )
+            p.drawString(100, y, "{}: {} {}".format(ingredient_name,
+                                                    ingredient_quantity,
+                                                    ingredient_unit))
             y -= 20
-        
+
         p.showPage()
         p.save()
 
         pdf_buffer.seek(0)
 
         response = HttpResponse(pdf_buffer, content_type='application/pdf')
-        response['Content-Disposition'] = 'attachment; filename="shopping_list.pdf"'
+        response['Content-Disposition'] = (
+            'attachment; filename="shopping_list.pdf"'
+        )
 
         return response

@@ -1,12 +1,12 @@
-from djoser.serializers import UserCreateSerializer, UserSerializer, PasswordSerializer
+from django.contrib.auth.password_validation import validate_password
+from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
-from django.contrib.auth.password_validation import validate_password
 
-from .utility import username_is_valid
+from recipes.models import Recipe
 
 from .models import User
-from recipes.models import Recipe
+from .utility import username_is_valid
 
 
 class OurUserCreateSerializer(UserCreateSerializer):
@@ -29,13 +29,15 @@ class OurUserCreateSerializer(UserCreateSerializer):
             UniqueTogetherValidator(
                 queryset=User.objects.all(),
                 fields=['username', 'email'],
-                message = 'Данные логин или пароль уже используются'
+                message='Данные логин или пароль уже используются'
             ),
         )
 
     def validate_username(self, data):
         if data.lower() == "me":
-            raise serializers.ValidationError("me - недопустимое имя пользователя.")
+            raise serializers.ValidationError(
+                "me - недопустимое имя пользователя."
+            )
         if not username_is_valid(data):
             raise serializers.ValidationError(
                 "Введите корректное имя пользователя."
@@ -86,7 +88,12 @@ class OurSubscriptionRecipeSerializer(serializers.ModelSerializer):
     """Наш сериализатор для отображения информации о рецепте."""
     class Meta:
         model = Recipe
-        fields = ('id', 'name', 'image', 'cooking_time')
+        fields = (
+            'id',
+            'name',
+            'image',
+            'cooking_time'
+        )
 
 
 class OurSubscriptionSerializer(UserSerializer):
@@ -99,7 +106,7 @@ class OurSubscriptionSerializer(UserSerializer):
         fields = (
             'id',
             'email',
-            'username',                  
+            'username',
             'first_name',
             'last_name',
             'is_subscribed',

@@ -1,17 +1,13 @@
-from rest_framework import status, permissions, viewsets, mixins
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework.pagination import PageNumberPagination
-
 from django.shortcuts import get_object_or_404
+from rest_framework import mixins, permissions, status, viewsets
+from rest_framework.decorators import action
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.response import Response
 
-from .serializers import (
-    OurUserCreateSerializer,
-    OurUserSerializer,
-    OurPasswordReentrySerializer,
-    OurSubscriptionSerializer
-)
-from .models import User, Subscribe
+from .models import Subscribe, User
+from .serializers import (OurPasswordReentrySerializer,
+                          OurSubscriptionSerializer, OurUserCreateSerializer,
+                          OurUserSerializer)
 
 
 class OurUserCreateViewSet(viewsets.ModelViewSet):
@@ -24,7 +20,7 @@ class OurUserCreateViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.AllowAny]
     pagination_class = PageNumberPagination
     pagination_class.page_size = 6
-    # serializer_class = OurUserCreateSerializer
+
     def get_serializer_class(self):
         if self.action == 'create':
             return OurUserCreateSerializer
@@ -33,7 +29,7 @@ class OurUserCreateViewSet(viewsets.ModelViewSet):
     def create(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = serializer.save()
+        user = serializer.save()  # noqa
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
@@ -45,31 +41,6 @@ class OurUserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 
     serializer_class = OurUserCreateSerializer
 
-    # def get_serializer_class(self):
-    #     if self.action == 'create':
-    #         return OurUserCreateSerializer
-    #     return OurUserSerializer
-    
-    # pagination_class = PageNumberPagination
-
-    # def list(self, request, *args, **kwargs):
-    #     queryset = self.filter_queryset(self.get_queryset())
-    #     page = self.paginate_queryset(queryset)
-    #     if page is not None:
-    #         serializer = self.get_serializer(page, many=True)
-    #         return self.get_paginated_response(serializer.data)
-
-    #     serializer = self.get_serializer(queryset, many=True)
-    #     return Response(serializer.data)
-
-    # def list(self, request):
-    #     queryset = self.get_queryset()
-    #     paginator = PageNumberPagination()
-    #     paginator.page_size = 6
-    #     paginated_queryset = paginator.paginate_queryset(queryset, request)
-    #     serializer = OurUserSerializer(paginated_queryset, many=True, context={'request': request})
-    #     return paginator.get_paginated_response(serializer.data)
-
     @action(
         detail=False,
         permission_classes=[permissions.IsAuthenticated]
@@ -77,10 +48,12 @@ class OurUserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     def subscriptions(self, request):
         user = request.user
         subscriptions = User.objects.filter(subscribers__user=user)
-        # subscriptions = Subscribe.objects.filter(user=request.user)
         paginator = PageNumberPagination()
         paginator.page_size = 6
-        paginated_subscriptions = paginator.paginate_queryset(subscriptions, request)
+        paginated_subscriptions = paginator.paginate_queryset(
+            subscriptions,
+            request
+        )
         serializer = OurSubscriptionSerializer(
             paginated_subscriptions,
             many=True,
@@ -99,12 +72,15 @@ class OurUserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         author = get_object_or_404(User, id=pk)
         subscription = Subscribe.objects.filter(
             user=request.user, author=author)
-        
+
         if request.method == 'DELETE':
             if not subscription:
                 if author != request.user:
                     return Response(
-                        {'errors':'Невозможно удалить несуществующую подписку.'},
+                        {
+                            'errors':
+                            ' Невозможно удалить несуществующую подписку.'
+                        },
                         status=status.HTTP_400_BAD_REQUEST
                     )
                 return Response(
@@ -119,13 +95,13 @@ class OurUserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                 {'errors': 'Вы уже подписаны на этого пользователя.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
+
         if author == request.user:
             return Response(
                 {'errors': 'Невозможно подписаться на самого себя.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
+
         Subscribe.objects.create(user=request.user, author=author)
         serializer = OurSubscriptionSerializer(
             author,
@@ -174,16 +150,21 @@ class OurChangePasswordViewSet(viewsets.ViewSet):
         serializer.is_valid(raise_exception=True)
 
         user = request.user
-        if not user.check_password(serializer.validated_data['current_password']):
+        if not user.check_password(
+            serializer.validated_data['current_password']
+        ):
             return Response(
                 {'current_password': 'Неверный пароль.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
+
         new_password = serializer.validated_data['new_password']
         if user.check_password(new_password):
             return Response(
-                {'new_password': 'Новый пароль не может совпадать с текущим паролем.'},
+                {
+                    'new_password':
+                    ' Новый пароль не может совпадать с текущим паролем.'
+                },
                 status=status.HTTP_400_BAD_REQUEST
             )
 

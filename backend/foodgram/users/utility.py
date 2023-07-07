@@ -1,11 +1,10 @@
 import re
+
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
-# from django.utils.regex_helper import _lazy_re_compile
-
 
 username_validator = RegexValidator(
-    re.compile('^[\w.@+-]+\Z'),
+    re.compile(r'^[\w.@+-]+\Z'),
     message='Введите корректное имя пользователя.',
     code='invalid',
 )

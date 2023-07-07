@@ -1,5 +1,5 @@
-from django.db import models
 from django.core.validators import RegexValidator
+from django.db import models
 
 
 class Tag(models.Model):
@@ -13,7 +13,7 @@ class Tag(models.Model):
     color = models.CharField(
         verbose_name='цвет в HEX',
         max_length=7,
-        unique=True, # unique??
+        unique=True,  # unique??
         validators=[
             RegexValidator(
                 regex='^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$',
@@ -21,7 +21,9 @@ class Tag(models.Model):
             )
         ],
         default='#ffffff',
-        help_text='Цвет в формате HEX, который будет относится к данному тегу'
+        help_text=(
+            'Цвет в формате HEX, который будет относится к данному тегу'
+        )
     )
     slug = models.SlugField(
         verbose_name='уникальный слаг',

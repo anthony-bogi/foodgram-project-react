@@ -1,6 +1,8 @@
-import os
 import csv
+import os
+
 from django.core.management.base import BaseCommand
+
 from ingredients.models import Ingredient
 
 
@@ -9,12 +11,18 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         file_name = 'ingredients.csv'
-        file_path = os.path.join(os.path.dirname(__file__), *([os.pardir] * 6), 'data', file_name)
+        file_path = os.path.join(
+            os.path.dirname(__file__),
+            *([os.pardir] * 6), 'data',
+            file_name
+        )
         if Ingredient.objects.exists():
             self.stderr.write('Данные об ингредиентах уже загружены.')
             return
-        
-        self.stdout.write(f'Загружаем данные об ингредиентах из {file_name}...')
+
+        self.stdout.write(
+            f'Загружаем данные об ингредиентах из {file_name}...'
+        )
         with open(file_path, newline='', encoding='utf-8') as f:
             reader = csv.reader(f)
             for row in reader:

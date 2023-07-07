@@ -1,8 +1,7 @@
 from rest_framework.viewsets import ReadOnlyModelViewSet
-# from rest_framework.pagination import PageNumberPagination
 
-from .serializers import OurTagSerializer
 from .models import Tag
+from .serializers import OurTagSerializer
 
 
 class OurTagViewSet(ReadOnlyModelViewSet):
@@ -10,5 +9,3 @@ class OurTagViewSet(ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = OurTagSerializer
     permission_classes = []
-    # pagination_class = PageNumberPagination
-    # pagination_class.page_size = 100

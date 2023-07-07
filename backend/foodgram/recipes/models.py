@@ -1,9 +1,9 @@
-from django.db import models
 from django.core.validators import MinValueValidator
+from django.db import models
 
-from users.models import User
 from ingredients.models import Ingredient
 from tags.models import Tag
+from users.models import User
 
 
 class Recipe(models.Model):
@@ -124,7 +124,7 @@ class Favorites(models.Model):
                 name='unique_favorite'
             )
         ]
-    
+
     def __str__(self):
         return f'{self.user} добавил рецепт "{self.recipe}" в Избранное.'
 
@@ -155,6 +155,7 @@ class ShoppingList(models.Model):
                 name='unique_shopping_list'
             )
         ]
-    
+
     def __str__(self):
-        return f'{self.user} добавил рецепт "{self.recipe}" в Список своих покупок.'
+        return (f'{self.user} добавил рецепт "{self.recipe}"'
+                ' в Список своих покупок.')

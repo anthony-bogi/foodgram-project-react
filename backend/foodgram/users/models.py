@@ -12,13 +12,19 @@ class User(AbstractUser):
         verbose_name='адрес электронной почты (email)',
         max_length=254,
         unique=True,
-        help_text='Электронный адрес, с которым будет связана учетная запись пользователя'
+        help_text=(
+            'Электронный адрес, '
+            'с которым будет связана учетная запись пользователя'
+        )
     )
     username = models.CharField(
         verbose_name='имя пользователя (логин)',
         max_length=150,
         unique=True,
-        help_text='Имя пользователя, под которым будут видны рецепты и комментарии'
+        help_text=(
+            'Имя пользователя, '
+            'под которым будут видны рецепты и комментарии'
+        )
     )
     first_name = models.CharField(
         verbose_name='имя',

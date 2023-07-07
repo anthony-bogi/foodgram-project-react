@@ -1,7 +1,7 @@
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
-from .serializers import OurIngredientSerializer
 from .models import Ingredient
+from .serializers import OurIngredientSerializer
 
 
 class OurIngredientViewSet(ReadOnlyModelViewSet):

@@ -1,10 +1,9 @@
-from rest_framework import serializers
 from django.db.models import F
 from drf_extra_fields.fields import Base64ImageField
+from rest_framework import serializers
 
 from recipes.models import Recipe
 from tags.models import Tag
-
 from tags.serializers import OurTagSerializer
 from users.serializers import OurUserSerializer
 
@@ -34,7 +33,7 @@ class OurRecipeSerializer(serializers.ModelSerializer):
 
     def get_ingredients(self, obj):
         recipe = obj
-        ingredients = recipe.ingredients.annotate(
+        return recipe.ingredients.annotate(
             amount=F('ingredients_in_recipe__amount')
         ).values(
             'id',
@@ -42,14 +41,13 @@ class OurRecipeSerializer(serializers.ModelSerializer):
             'measurement_unit',
             'amount',
         )
-        return ingredients
 
     def get_is_favorited(self, obj):
         request = self.context['request']
         if not request or request.user.is_anonymous:
             return False
         return obj.is_favorited(request.user)
-        
+
     def get_is_in_shopping_cart(self, obj):
         request = self.context['request']
         if not request or request.user.is_anonymous:
@@ -92,14 +90,13 @@ class OurRecipeCreateSerializer(serializers.ModelSerializer):
 
     def get_ingredients(self, obj):
         recipe = obj
-        ingredients = recipe.ingredients.annotate(
+        return recipe.ingredients.annotate(
             amount=F('ingredients_in_recipe__amount')
         ).values(
             'id',
             'amount',
         )
-        return ingredients
-    
+
 
 class OurRecipeCreateOutputSerializer(serializers.ModelSerializer):
     """Наш сериализатор для создания рецепта. Выходные данные."""
@@ -123,7 +120,7 @@ class OurRecipeCreateOutputSerializer(serializers.ModelSerializer):
         use_url=True,
         allow_null=True,
         required=False
-    )    
+    )
     text = serializers.CharField()
     cooking_time = serializers.IntegerField(
         min_value=1,
@@ -147,7 +144,7 @@ class OurRecipeCreateOutputSerializer(serializers.ModelSerializer):
 
     def get_ingredients(self, obj):
         recipe = obj
-        ingredients = recipe.ingredients.annotate(
+        return recipe.ingredients.annotate(
             amount=F('ingredients_in_recipe__amount')
         ).values(
             'id',
@@ -155,7 +152,6 @@ class OurRecipeCreateOutputSerializer(serializers.ModelSerializer):
             'measurement_unit',
             'amount',
         )
-        return ingredients
 
     def get_is_favorited(self, obj):
         user = self.context['request'].user
@@ -171,7 +167,9 @@ class OurRecipeCreateOutputSerializer(serializers.ModelSerializer):
 
 
 class OurFavoritesSLRecipeSerializer(serializers.ModelSerializer):
-    """Наш сериализатор для отображения рецепта в избранном и списке покупок."""
+    """
+    Наш сериализатор для отображения рецепта в избранном и списке покупок.
+    """
 
     class Meta:
         model = Recipe
