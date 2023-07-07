@@ -33,7 +33,7 @@ class OurUserCreateViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-class OurUserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
+class OurUserViewSet(viewsets.GenericViewSet):
     """Наш ViewSet для работы с пользователем и его подписками."""
 
     queryset = User.objects.all()
