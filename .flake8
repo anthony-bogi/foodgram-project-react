@@ -1,0 +1,8 @@
+[flake8]
+exclude = 
+    migrations,
+    tests,
+    venv/,
+    env/
+per-file-ignores = 
+    */settings.py:E501
