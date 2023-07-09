@@ -168,11 +168,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 .first()
                 .ingredient.measurement_unit
             )
-            p.drawString(START_X_COORD_PAGE, y, "{}: {} {}".format(
-                ingredient_name,
-                ingredient_quantity,
-                ingredient_unit
-                )
+            p.drawString(
+                START_X_COORD_PAGE,
+                y,
+                "{}: {} {}".format(ingredient_name,
+                                   ingredient_quantity,
+                                   ingredient_unit)
             )
             y -= DELTA_Y_COORD_PAGE
 
