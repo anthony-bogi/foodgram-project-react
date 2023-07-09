@@ -7,103 +7,54 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 from rest_framework import permissions, status, viewsets
+from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
-from ingredients.models import Ingredient
-
+from .constants import (DELTA_Y_COORD_PAGE, FONT_SIZE, LIST_Y_COORD_PAGE,
+                        PAGINATION_SIZE, START_X_COORD_PAGE,
+                        START_Y_COORD_PAGE)
+from .exceptions import MissingFontError
 from .models import Favorites, Ingredients, Recipe, ShoppingList
-from .serializers import (OurFavoritesSLRecipeSerializer,
-                          OurRecipeCreateOutputSerializer,
-                          OurRecipeCreateSerializer, OurRecipeSerializer)
+from .permissions import IsRecipeAuthorOrReadOnly
+from .serializers import (FavoritesSLRecipeSerializer,
+                          RecipeCreateUpdateSerializer, RecipeSerializer)
 
 
-class MissingFontError(Exception):
-    """Искллючение, если в системе отсутсвует опредленный шрифт."""
-    pass
-
-
-class OurRecipeViewSet(viewsets.ReadOnlyModelViewSet):
+class RecipeViewSet(viewsets.ModelViewSet):
     """Наш ViewSet для работы с рецептами."""
     queryset = Recipe.objects.all()
-    serializer_class = OurRecipeSerializer
+    serializer_class = RecipeSerializer
     permission_classes = [permissions.AllowAny]
     pagination_class = PageNumberPagination
-    pagination_class.page_size = 6
+    pagination_class.page_size = PAGINATION_SIZE
+
+    def get_serializer_class(self):
+        if self.action in ['create', 'partial_update']:
+            return RecipeCreateUpdateSerializer
+        return self.serializer_class
 
     def get_permissions(self):
-        if self.action in [
-            'create',
-            'partial_update',
-            'destroy',
-            'create_favorite',
-            'delete_favorite',
-            'create_shopping_list',
-            'delete_shopping_list',
-            'download_shopping_list'
-        ]:
-            permission_classes = [permissions.IsAuthenticated]
+        if self.action in ['partial_update', 'destroy']:
+            recipe_id = self.kwargs.get('pk')
+            if not Recipe.objects.filter(id=recipe_id).exists():
+                self.permission_classes = [permissions.IsAuthenticated]
+            else:
+                self.permission_classes = [IsRecipeAuthorOrReadOnly]
+        elif self.action in ['list', 'retrieve']:
+            self.permission_classes = [permissions.AllowAny]
         else:
-            permission_classes = [permissions.AllowAny]
-        return [permission() for permission in permission_classes]
+            self.permission_classes = [permissions.IsAuthenticated]
+        return [permission() for permission in self.permission_classes]
 
     def get_queryset(self):
         return super().get_queryset()
 
-    def create(self, request, *args, **kwargs):
-        create_serializer = OurRecipeCreateSerializer(data=request.data)
-        create_serializer.is_valid(raise_exception=True)
-        author = request.user
-        validated_data = create_serializer.validated_data
-        validated_data['author'] = author
-        ingredients_data = request.data.get('ingredients')
-        recipe = create_serializer.save()
-        if ingredients_data:
-            for ingredient_data in ingredients_data:
-                ingredient_id = ingredient_data.get('id')
-                amount = ingredient_data.get('amount')
-                ingredient = Ingredient.objects.get(id=ingredient_id)
-                Ingredients.objects.create(
-                    recipe=recipe,
-                    ingredient=ingredient,
-                    amount=amount
-                )
-        output_serializer = OurRecipeCreateOutputSerializer(
-            recipe,
-            context={'request': request}
-        )
-        return Response(output_serializer.data, status=status.HTTP_201_CREATED)
-
-    def partial_update(self, request, *args, **kwargs):
-        instance = self.get_object()
-        if instance.author != self.request.user:
-            return Response(
-                {"error": "Вы не являетесь автором этого рецепта."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        serializer = OurRecipeCreateSerializer(
-            instance,
-            data=request.data,
-            partial=True
-        )
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        output_serializer = OurRecipeCreateOutputSerializer(
-            instance,
-            context={'request': request}
-        )
-        return Response(output_serializer.data)
-
-    def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        if instance.author != self.request.user:
-            return Response(
-                {"error": "Вы не являетесь автором этого рецепта."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        instance.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
+    @action(
+        methods=['post'],
+        detail=True,
+        permission_classes=[permissions.IsAuthenticated]
+    )
     def create_favorite(self, request, *args, **kwargs):
         recipe = self.get_object()
         user = request.user
@@ -111,24 +62,34 @@ class OurRecipeViewSet(viewsets.ReadOnlyModelViewSet):
                                                             recipe=recipe)
         if not created:
             return Response(
-                {"error": "Рецепт уже добавлен в избранное."},
+                {'error': 'Рецепт уже добавлен в избранное.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        serializer = OurFavoritesSLRecipeSerializer(recipe)
+        serializer = FavoritesSLRecipeSerializer(recipe)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
+    @action(
+        methods=['delete'],
+        detail=True,
+        permission_classes=[permissions.IsAuthenticated]
+    )
     def delete_favorite(self, request, *args, **kwargs):
         recipe = self.get_object()
         user = request.user
         favorites = Favorites.objects.filter(user=user, recipe=recipe)
         if not favorites.exists():
             return Response(
-                {"error": "Рецепт не найден в избранном."},
+                {'error': 'Рецепт не найден в избранном.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
         favorites.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    @action(
+        methods=['post'],
+        detail=True,
+        permission_classes=[permissions.IsAuthenticated]
+    )
     def create_shopping_list(self, request, *args, **kwargs):
         recipe = self.get_object()
         user = request.user
@@ -138,29 +99,39 @@ class OurRecipeViewSet(viewsets.ReadOnlyModelViewSet):
         )
         if not created:
             return Response(
-                {"error": "Рецепт уже добавлен в список покупок."},
+                {'error': 'Рецепт уже добавлен в список покупок.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        serializer = OurFavoritesSLRecipeSerializer(recipe)
+        serializer = FavoritesSLRecipeSerializer(recipe)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
+    @action(
+        methods=['delete'],
+        detail=True,
+        permission_classes=[permissions.IsAuthenticated]
+    )
     def delete_shopping_list(self, request, *args, **kwargs):
         recipe = self.get_object()
         user = request.user
         shopping_list = ShoppingList.objects.filter(user=user, recipe=recipe)
         if not shopping_list.exists():
             return Response(
-                {"error": "Рецепт не найден в списке покупок."},
+                {'error': 'Рецепт не найден в списке покупок.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
         shopping_list.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    @action(
+        detail=False,
+        methods=['get'],
+        permission_classes=[permissions.IsAuthenticated]
+    )
     def download_shopping_list(self, request):
         user = self.get_serializer_context()['request'].user
         shopping_list = ShoppingList.objects.filter(user=user)
         if not shopping_list.exists():
-            return HttpResponse("Список покупок пуст.")
+            return HttpResponse('Список покупок пуст.')
         ingredients = (Ingredients.objects
                        .filter(recipe__shopping_list__in=shopping_list)
                        .values('ingredient__name',
@@ -183,13 +154,13 @@ class OurRecipeViewSet(viewsets.ReadOnlyModelViewSet):
                 'Arial',
                 'C:/WINDOWS/FONTS/ARIAL.ttf')
             )
-            p.setFont("Arial", 12)
+            p.setFont('Arial', FONT_SIZE)
         except MissingFontError:
-            p.setFont("Helvetica", 12)
+            p.setFont('Helvetica', FONT_SIZE)
 
-        p.drawString(100, 750, "Список покупок")
+        p.drawString(START_X_COORD_PAGE, START_Y_COORD_PAGE, 'Список покупок')
 
-        y = 700
+        y = LIST_Y_COORD_PAGE
 
         for ingredient_name, ingredient_quantity in ingredient_totals.items():
             ingredient_unit = (
@@ -197,10 +168,13 @@ class OurRecipeViewSet(viewsets.ReadOnlyModelViewSet):
                 .first()
                 .ingredient.measurement_unit
             )
-            p.drawString(100, y, "{}: {} {}".format(ingredient_name,
-                                                    ingredient_quantity,
-                                                    ingredient_unit))
-            y -= 20
+            p.drawString(START_X_COORD_PAGE, y, "{}: {} {}".format(
+                ingredient_name,
+                ingredient_quantity,
+                ingredient_unit
+                )
+            )
+            y -= DELTA_Y_COORD_PAGE
 
         p.showPage()
         p.save()

@@ -4,13 +4,14 @@ from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
+from recipes.constants import PAGINATION_SIZE
+
 from .models import Subscribe, User
-from .serializers import (OurPasswordReentrySerializer,
-                          OurSubscriptionSerializer, OurUserCreateSerializer,
-                          OurUserSerializer)
+from .serializers import (ModifiedUserCreateSerializer, ModifiedUserSerializer,
+                          PasswordReentrySerializer, SubscriptionSerializer)
 
 
-class OurUserCreateViewSet(viewsets.ModelViewSet):
+class UserCreateViewSet(viewsets.ModelViewSet):
     """
     Наш ViewSet для регистрации анонимного пользователя.
     Показ существующих пользователей.
@@ -19,12 +20,12 @@ class OurUserCreateViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     permission_classes = [permissions.AllowAny]
     pagination_class = PageNumberPagination
-    pagination_class.page_size = 6
+    pagination_class.page_size = PAGINATION_SIZE
 
     def get_serializer_class(self):
         if self.action == 'create':
-            return OurUserCreateSerializer
-        return OurUserSerializer
+            return ModifiedUserCreateSerializer
+        return ModifiedUserSerializer
 
     def create(self, request):
         serializer = self.get_serializer(data=request.data)
@@ -33,13 +34,13 @@ class OurUserCreateViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-class OurUserViewSet(viewsets.GenericViewSet):
+class UserViewSet(viewsets.GenericViewSet):
     """Наш ViewSet для работы с пользователем и его подписками."""
 
     queryset = User.objects.all()
     permission_classes = [permissions.IsAuthenticated]
 
-    serializer_class = OurUserCreateSerializer
+    serializer_class = ModifiedUserCreateSerializer
 
     @action(
         detail=False,
@@ -49,12 +50,12 @@ class OurUserViewSet(viewsets.GenericViewSet):
         user = request.user
         subscriptions = User.objects.filter(subscribers__user=user)
         paginator = PageNumberPagination()
-        paginator.page_size = 6
+        paginator.page_size = PAGINATION_SIZE
         paginated_subscriptions = paginator.paginate_queryset(
             subscriptions,
             request
         )
-        serializer = OurSubscriptionSerializer(
+        serializer = SubscriptionSerializer(
             paginated_subscriptions,
             many=True,
             context={
@@ -70,48 +71,35 @@ class OurUserViewSet(viewsets.GenericViewSet):
     )
     def subscribe(self, request, pk):
         author = get_object_or_404(User, id=pk)
-        subscription = Subscribe.objects.filter(
-            user=request.user,
-            author=author
+        serializer = SubscriptionSerializer(
+            author,
+            data={'user': request.user.id, 'author': author.id},
+            context={'request': request}
         )
-
-        if request.method == 'DELETE':
-            if not subscription:
-                if author != request.user:
+        if serializer.is_valid():
+            if request.method == 'DELETE':
+                subscription = Subscribe.objects.filter(
+                    user=request.user,
+                    author=author
+                )
+                if not subscription.exists():
                     return Response(
-                        {
-                            'errors':
-                            ' Невозможно удалить несуществующую подписку.'
-                        },
+                        {'errors':
+                         ' Невозможно удалить несуществующую подписку.'},
                         status=status.HTTP_400_BAD_REQUEST
                     )
-                return Response(
-                    {'errors': 'Невозможно отписаться от самого себя.'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            subscription.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-
-        if subscription:
+                subscription.delete()
+                return Response(status=status.HTTP_204_NO_CONTENT)
+            serializer.save()
+            Subscribe.objects.create(user=request.user, author=author)
             return Response(
-                {'errors': 'Вы уже подписаны на этого пользователя.'},
-                status=status.HTTP_400_BAD_REQUEST
+                serializer.data,
+                status=status.HTTP_201_CREATED
             )
-
-        if author == request.user:
-            return Response(
-                {'errors': 'Невозможно подписаться на самого себя.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        Subscribe.objects.create(user=request.user, author=author)
-        serializer = OurSubscriptionSerializer(
-            author,
-            context={
-                'request': request
-            }
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
         )
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @action(
         detail=True,
@@ -119,7 +107,7 @@ class OurUserViewSet(viewsets.GenericViewSet):
     )
     def get(self, request, pk=None):
         user = self.get_object()
-        serializer = OurUserSerializer(
+        serializer = ModifiedUserSerializer(
             user,
             context={
                 'request': request
@@ -130,7 +118,7 @@ class OurUserViewSet(viewsets.GenericViewSet):
     def retrieve(self, request, pk=None):
         queryset = self.get_queryset()
         user = get_object_or_404(queryset, pk=pk)
-        serializer = OurUserSerializer(user, context={'request': request})
+        serializer = ModifiedUserSerializer(user, context={'request': request})
         return Response(serializer.data)
 
     @action(
@@ -139,16 +127,16 @@ class OurUserViewSet(viewsets.GenericViewSet):
     )
     def me(self, request):
         user = request.user
-        serializer = OurUserSerializer(user)
+        serializer = ModifiedUserSerializer(user)
         return Response(serializer.data)
 
 
-class OurChangePasswordViewSet(viewsets.ViewSet):
+class ChangePasswordViewSet(viewsets.ViewSet):
     """Наш ViewSet для смены пароля пользователем."""
     permission_classes = (permissions.IsAuthenticated,)
 
     def set_password(self, request):
-        serializer = OurPasswordReentrySerializer(data=request.data)
+        serializer = PasswordReentrySerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         user = request.user

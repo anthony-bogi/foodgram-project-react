@@ -56,12 +56,6 @@ class Recipe(models.Model):
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
 
-    def is_favorited(self, user):
-        return self.favorites.filter(user=user).exists()
-
-    def is_in_shopping_cart(self, user):
-        return self.shopping_list.filter(user=user).exists()
-
     def __str__(self):
         return self.name
 
@@ -91,6 +85,7 @@ class Ingredients(models.Model):
     )
 
     class Meta:
+        ordering = ('id',)
         verbose_name = 'Ингредиент в рецепте'
         verbose_name_plural = 'Ингредиенты в рецептах'
 
@@ -104,18 +99,19 @@ class Favorites(models.Model):
         User,
         verbose_name='пользователь',
         on_delete=models.CASCADE,
-        related_name='favorites',
+        related_name='favorite',
         help_text='Пользователь, добавивший рецепт в избранное'
     )
     recipe = models.ForeignKey(
         Recipe,
         verbose_name='рецепт',
         on_delete=models.CASCADE,
-        related_name='favorites',
+        related_name='favorite',
         help_text='Название рецепта'
     )
 
     class Meta:
+        ordering = ('id',)
         verbose_name = 'Избранное'
         verbose_name_plural = 'Избранное'
         constraints = [
@@ -147,6 +143,7 @@ class ShoppingList(models.Model):
     )
 
     class Meta:
+        ordering = ('id',)
         verbose_name = 'Список покупок'
         verbose_name_plural = 'Список покупок'
         constraints = [

@@ -3,7 +3,7 @@ from rest_framework import serializers
 from .models import Tag
 
 
-class OurTagSerializer(serializers.ModelSerializer):
+class TagSerializer(serializers.ModelSerializer):
     """Наш сериализатор для вывода информации о тегах."""
 
     class Meta:

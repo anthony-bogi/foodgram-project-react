@@ -5,11 +5,11 @@ from rest_framework.validators import UniqueTogetherValidator
 
 from recipes.models import Recipe
 
-from .models import User
+from .models import Subscribe, User
 from .utility import username_is_valid
 
 
-class OurUserCreateSerializer(UserCreateSerializer):
+class ModifiedUserCreateSerializer(UserCreateSerializer):
     """Наш сериализатор для создания/регистрации нового пользователя."""
     class Meta:
         fields = (
@@ -36,18 +36,20 @@ class OurUserCreateSerializer(UserCreateSerializer):
     def validate_username(self, data):
         if data.lower() == "me":
             raise serializers.ValidationError(
-                "me - недопустимое имя пользователя."
+                'me - недопустимое имя пользователя.'
             )
         if not username_is_valid(data):
             raise serializers.ValidationError(
-                "Введите корректное имя пользователя."
+                'Введите корректное имя пользователя.'
             )
         return data
 
 
-class OurUserSerializer(UserSerializer):
+class ModifiedUserSerializer(UserSerializer):
     """Наш сериализатор для вывода информации о пользователях."""
-
+    username = serializers.CharField(required=False)
+    first_name = serializers.CharField(required=False)
+    last_name = serializers.CharField(required=False)
     is_subscribed = serializers.SerializerMethodField()
 
     class Meta:
@@ -68,7 +70,7 @@ class OurUserSerializer(UserSerializer):
         return obj.subscribers.filter(user=request.user).exists()
 
 
-class OurPasswordReentrySerializer(serializers.Serializer):
+class PasswordReentrySerializer(serializers.Serializer):
     """Наш сериализатор для смены текущего пароля пользователя."""
     current_password = serializers.CharField(
         max_length=150,
@@ -84,7 +86,7 @@ class OurPasswordReentrySerializer(serializers.Serializer):
         model = User
 
 
-class OurSubscriptionRecipeSerializer(serializers.ModelSerializer):
+class SubscriptionRecipeSerializer(serializers.ModelSerializer):
     """Наш сериализатор для отображения информации о рецепте."""
     class Meta:
         model = Recipe
@@ -96,9 +98,9 @@ class OurSubscriptionRecipeSerializer(serializers.ModelSerializer):
         )
 
 
-class OurSubscriptionSerializer(UserSerializer):
+class SubscriptionSerializer(ModifiedUserSerializer):
     """Наш сериализатор для подписки на авторов рецептов."""
-    recipes = OurSubscriptionRecipeSerializer(many=True)
+    recipes = SubscriptionRecipeSerializer(many=True, required=False)
     recipes_count = serializers.SerializerMethodField()
     is_subscribed = serializers.SerializerMethodField()
 
@@ -113,6 +115,25 @@ class OurSubscriptionSerializer(UserSerializer):
             'recipes',
             'recipes_count'
         )
+
+    def validate(self, data):
+        request = self.context['request']
+        author = self.instance
+        if request.method == 'DELETE':
+            return data
+        existing_subscription = Subscribe.objects.filter(
+            user=request.user,
+            author=author
+        )
+        if existing_subscription.exists():
+            raise serializers.ValidationError(
+                'Вы уже подписаны на этого пользователя.'
+            )
+        if author == request.user:
+            raise serializers.ValidationError(
+                'Невозможно подписаться на самого себя.'
+            )
+        return data
 
     def get_recipes_count(self, obj):
         return obj.recipes.count()
@@ -129,4 +150,4 @@ class OurSubscriptionSerializer(UserSerializer):
         if max_recipes:
             max_recipes = int(max_recipes)
             queryset = queryset[:max_recipes]
-        return OurSubscriptionRecipeSerializer(queryset, many=True).data
+        return SubscriptionRecipeSerializer(queryset, many=True).data

@@ -65,34 +65,30 @@ class User(AbstractUser):
 
 class Subscribe(models.Model):
     """Наша модель для подписки на пользователя."""
-    id = models.AutoField(
-        primary_key=True,
-        verbose_name="ID",
-        help_text='Уникальный идентификатор ID'
-    )
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         related_name='subscribing',
-        verbose_name="Подписчик",
+        verbose_name='Подписчик',
         help_text='Имя пользователя, кто подписывается'
     )
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         related_name='subscribers',
-        verbose_name="Автор",
+        verbose_name='Автор',
         help_text='Имя пользователя, на кого подписываются'
     )
     created_at = models.DateTimeField(
         auto_now_add=True,
-        verbose_name="Дата подписки",
+        verbose_name='Дата подписки',
         help_text='Дата и время подписки'
     )
 
     class Meta:
-        verbose_name = "Подписка"
-        verbose_name_plural = "Подписки"
+        ordering = ('id',)
+        verbose_name = 'Подписка'
+        verbose_name_plural = 'Подписки'
 
         constraints = [
             models.UniqueConstraint(

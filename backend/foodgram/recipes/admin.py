@@ -7,6 +7,7 @@ class IngredientsAdminInline(admin.TabularInline):
     """Класс для отображения ингредиентов при создании рецепта в админке."""
     model = Ingredients
     can_delete = True
+    min_num = 1
     extra = 1
 
 
@@ -29,7 +30,7 @@ class AdminRecipe(admin.ModelAdmin):
 
     @admin.display(description='Количество в избранном')
     def favorites_amount(self, obj):
-        return obj.favorites.count()
+        return obj.favorite.count()
 
 
 @admin.register(Ingredients)
