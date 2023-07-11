@@ -1,8 +1,9 @@
 from django.contrib.auth.password_validation import validate_password
 from djoser.serializers import UserCreateSerializer, UserSerializer
+from recipes.models import Recipe
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
-from recipes.models import Recipe
+
 from .models import Subscribe, User
 from .utility import username_is_valid
 
