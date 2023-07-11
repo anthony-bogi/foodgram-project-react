@@ -12,7 +12,7 @@ class Command(BaseCommand):
         file_name = 'ingredients.csv'
         file_path = os.path.join(
             os.path.dirname(__file__),
-            *([os.pardir] * 5), 'data',
+            *([os.pardir] * 4), 'data',
             file_name
         )
         if Ingredient.objects.exists():
