@@ -3,9 +3,7 @@ from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
-
 from recipes.constants import PAGINATION_SIZE
-
 from .models import Subscribe, User
 from .serializers import (ModifiedUserCreateSerializer, ModifiedUserSerializer,
                           PasswordReentrySerializer, SubscriptionSerializer)

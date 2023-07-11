@@ -3,7 +3,6 @@ from django.db import transaction
 from django.db.models import F
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
-
 from ingredients.models import Ingredient
 from ingredients.serializers import IngredientForCreateSerializer
 from recipes.constants import COOKING_TIME_MAX_VALUE, COOKING_TIME_MIN_VALUE
