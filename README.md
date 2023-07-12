@@ -275,9 +275,11 @@ IP: [84.201.167.51](http://84.201.167.51/)
 
 Далее для проверки работоспособности сайта через админ-панель заходим по ссылке:
 
-```sh
-http://foodgrambyanthony.ddns.net/admin/ или http://84.201.167.51/admin/
-```
+- [http://foodgrambyanthony.ddns.net/admin/](http://foodgrambyanthony.ddns.net/admin/)
+
+или
+
+- [http://84.201.167.51/admin/](http://84.201.167.51/admin/)
 
 Вводим логин (по email) и пароль администратора:
 
