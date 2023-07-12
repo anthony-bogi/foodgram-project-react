@@ -45,7 +45,7 @@ git clone https://github.com:anthony-bogi/foodgram-project-react.git
 cd foodgram-project-react/
 ```
 
-А зетем в папку с инфраструктурой проекта:
+А затем в папку с инфраструктурой проекта:
 
 ```sh
 cd infra/
@@ -140,9 +140,16 @@ sh get-docker.sh
 sudo apt-get install docker-compose-plugin
 ```
 
-В файле ..infra/nginx.conf в локальном репозитории замените данные в строке server_name на IP-адрес удаленного сервера.
+Или проверьте установленные версии:
 
-Перейдите в директорию /infra и скопируйте на сервер файлы docker-compose.yml и nginx.conf:
+```sh
+docker version
+docker-compose version
+```
+
+В файле ../infra/nginx.conf в локальном репозитории замените данные в строке server_name на IP-адрес удаленного сервера.
+
+Скопируйте на сервер файлы docker-compose.yml и nginx.conf:
 
 ```sh
 scp docker-compose.yml nginx.conf username@IP:/home/username/
@@ -150,7 +157,7 @@ scp docker-compose.yml nginx.conf username@IP:/home/username/
 
 >где *username* - это имя пользователя на сервере, а *IP* - публичный IP-адрес сервера
 
-В репозитории проекта на Github в разделе Settings > Secrets > Actions создайте переменные окружения:
+В репозитории проекта на Github в разделе Settings > Secrets > Actions создайте переменные окружения.
 
 Запустите сборку контейнеров:
 
