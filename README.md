@@ -2,7 +2,7 @@
 
 [![Yambd_final workflow](https://github.com/anthony-bogi/foodgram-project-react/actions/workflows/foodgram_workflows.yml/badge.svg)](https://github.com/anthony-bogi/foodgram-project-react/actions/workflows/foodgram_workflows.yml)
 
-## Автор:
+### Автор:
 
 Богданович Антон [anthony-bogi](https://github.com/anthony-bogi)
 
@@ -36,7 +36,7 @@ Docker
 Склонируйте репозиторий на свой компьютер:
 
 ```sh
-git clone https://github.com:anthony-bogi/foodgram-project-react.git
+git clone git@github.com:anthony-bogi/foodgram-project-react.git
 ```
 
 Перейдите в корневую папку:
@@ -122,7 +122,7 @@ docker-compose start
 Склонируйте репозиторий:
 
 ```sh
-git clone https://github.com:anthony-bogi/foodgram-project-react.git
+git clone git@github.com:anthony-bogi/foodgram-project-react.git
 ```
 
 Зайдите на сервер и остановите службу nginx:
