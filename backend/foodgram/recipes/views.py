@@ -1,7 +1,9 @@
+import os
 from collections import defaultdict
 from io import BytesIO
 
 from django.http import HttpResponse
+from django_filters.rest_framework import DjangoFilterBackend
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
@@ -15,6 +17,7 @@ from .constants import (DELTA_Y_COORD_PAGE, FONT_SIZE, LIST_Y_COORD_PAGE,
                         PAGINATION_SIZE, START_X_COORD_PAGE,
                         START_Y_COORD_PAGE)
 from .exceptions import MissingFontError
+from .filters import RecipeFilter
 from .models import Favorites, Ingredients, Recipe, ShoppingList
 from .permissions import IsRecipeAuthorOrReadOnly
 from .serializers import (FavoritesSLRecipeSerializer,
@@ -28,6 +31,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.AllowAny]
     pagination_class = PageNumberPagination
     pagination_class.page_size = PAGINATION_SIZE
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = RecipeFilter
 
     def get_serializer_class(self):
         if self.action in ['create', 'partial_update']:
@@ -150,19 +155,25 @@ class RecipeViewSet(viewsets.ModelViewSet):
         p = canvas.Canvas(pdf_buffer, pagesize=letter)
 
         try:
-            pdfmetrics.registerFont(TTFont(
-                'Arial',
-                'C:/WINDOWS/FONTS/ARIAL.ttf')
-            )
-            p.setFont('Arial', FONT_SIZE)
+            if os.path.exists('./fonts/ArialRegular.ttf'):
+                pdfmetrics.registerFont(TTFont(
+                    'Arial',
+                    './fonts/ArialRegular.ttf')
+                )
+                p.setFont('Arial', FONT_SIZE)
+            else:
+                raise MissingFontError
         except MissingFontError:
-            p.setFont('Helvetica', FONT_SIZE)
+            error = MissingFontError()
+            return error.generate_txt_shopping_list(ingredient_totals)
 
         p.drawString(START_X_COORD_PAGE, START_Y_COORD_PAGE, 'Список покупок')
 
         y = LIST_Y_COORD_PAGE
 
-        for ingredient_name, ingredient_quantity in ingredient_totals.items():
+        for ingredient_name, ingredient_quantity in (
+            ingredient_totals.items()
+        ):
             ingredient_unit = (
                 Ingredients.objects.filter(ingredient__name=ingredient_name)
                 .first()
