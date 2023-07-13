@@ -99,7 +99,7 @@ class SubscriptionRecipeSerializer(serializers.ModelSerializer):
 
 class SubscriptionSerializer(ModifiedUserSerializer):
     """Наш сериализатор для подписки на авторов рецептов."""
-    recipes = SubscriptionRecipeSerializer(many=True, required=False)
+    recipes = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
     is_subscribed = serializers.SerializerMethodField()
 
