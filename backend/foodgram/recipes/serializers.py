@@ -176,10 +176,12 @@ class RecipeCreateUpdateSerializer(RecipeSerializer):
         ingredients_data = self.context['request'].data.get('ingredients', [])
         for ingredient_data in ingredients_data:
             amount = ingredient_data.get('amount')
-            if not (AMOUNT_INGREDIENT_MIN_VALUE < amount <
-                    AMOUNT_INGREDIENT_MAX_VALUE):
+            if (int(amount) < AMOUNT_INGREDIENT_MIN_VALUE or
+                    int(amount) > AMOUNT_INGREDIENT_MAX_VALUE):
                 raise serializers.ValidationError({
-                    'amount': 'Введите количесвто между 1 и 50000.'
+                    'amount':
+                    ' Проверьте, что количество каждого ингредиента'
+                    ' находится в диапазоне от 1 до 50000.'
                 })
 
         ingredient_ids = [
@@ -188,7 +190,8 @@ class RecipeCreateUpdateSerializer(RecipeSerializer):
         if len(ingredient_ids) != len(set(ingredient_ids)):
             raise serializers.ValidationError({
                 'ingredients':
-                ' Нельзя добавлять повторно один и тот же ингредиент.'
+                ' Нельзя добавлять один и тот же ингредиент в рецепт дважды.'
+                ' Удалите дублирующиеся ингредиенты и попробуйте снова.'
             })
 
         return data
