@@ -18,7 +18,7 @@ from .constants import (DELTA_Y_COORD_PAGE, FONT_SIZE, LIST_Y_COORD_PAGE,
                         START_Y_COORD_PAGE)
 from .exceptions import MissingFontError
 from .filters import RecipeFilter
-from .models import Favorites, Ingredients, Recipe, ShoppingList
+from .models import Favorites, IngredientsInRecipe, Recipe, ShoppingList
 from .permissions import IsRecipeAuthorOrReadOnly
 from .serializers import (FavoritesSLRecipeSerializer,
                           RecipeCreateUpdateSerializer, RecipeSerializer)
@@ -137,7 +137,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         shopping_list = ShoppingList.objects.filter(user=user)
         if not shopping_list.exists():
             return HttpResponse('Список покупок пуст.')
-        ingredients = (Ingredients.objects
+        ingredients = (IngredientsInRecipe.objects
                        .filter(recipe__shopping_list__in=shopping_list)
                        .values('ingredient__name',
                                'amount',
@@ -175,7 +175,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
             ingredient_totals.items()
         ):
             ingredient_unit = (
-                Ingredients.objects.filter(ingredient__name=ingredient_name)
+                IngredientsInRecipe.objects
+                .filter(ingredient__name=ingredient_name)
                 .first()
                 .ingredient.measurement_unit
             )

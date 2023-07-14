@@ -1,11 +1,11 @@
 from django.contrib import admin
 
-from .models import Favorites, Ingredients, Recipe, ShoppingList
+from .models import Favorites, IngredientsInRecipe, Recipe, ShoppingList
 
 
 class IngredientsAdminInline(admin.TabularInline):
     """Класс для отображения ингредиентов при создании рецепта в админке."""
-    model = Ingredients
+    model = IngredientsInRecipe
     can_delete = True
     min_num = 1
     extra = 1
@@ -33,7 +33,7 @@ class AdminRecipe(admin.ModelAdmin):
         return obj.favorite.count()
 
 
-@admin.register(Ingredients)
+@admin.register(IngredientsInRecipe)
 class AdminIngredients(admin.ModelAdmin):
     """Наша модель для ингредиентов в рецепте в админке."""
     list_display = (

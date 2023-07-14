@@ -1,6 +1,6 @@
 from django.http import HttpResponse
 
-from .models import Ingredients
+from .models import IngredientsInRecipe
 
 
 class MissingFontError(Exception):
@@ -17,7 +17,8 @@ class MissingFontError(Exception):
         response.write("{}\n".format("=" * 20))
         for ingredient_name, ingredient_quantity in ingredient_totals.items():
             ingredient_unit = (
-                Ingredients.objects.filter(ingredient__name=ingredient_name)
+                IngredientsInRecipe.objects
+                .filter(ingredient__name=ingredient_name)
                 .first()
                 .ingredient.measurement_unit
             )

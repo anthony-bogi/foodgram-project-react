@@ -1,9 +1,10 @@
 from django.shortcuts import get_object_or_404
-from recipes.constants import PAGINATION_SIZE
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
+
+from recipes.constants import PAGINATION_SIZE
 
 from .models import Subscribe, User
 from .serializers import (ModifiedUserCreateSerializer, ModifiedUserSerializer,
@@ -75,29 +76,32 @@ class UserViewSet(viewsets.GenericViewSet):
             data={'user': request.user.id, 'author': author.id},
             context={'request': request}
         )
-        if serializer.is_valid():
-            if request.method == 'DELETE':
-                subscription = Subscribe.objects.filter(
-                    user=request.user,
-                    author=author
-                )
-                if not subscription.exists():
-                    return Response(
-                        {'errors':
-                         ' Невозможно удалить несуществующую подписку.'},
-                        status=status.HTTP_400_BAD_REQUEST
-                    )
-                subscription.delete()
-                return Response(status=status.HTTP_204_NO_CONTENT)
-            serializer.save()
-            Subscribe.objects.create(user=request.user, author=author)
+
+        if not serializer.is_valid(raise_exception=True):
             return Response(
-                serializer.data,
-                status=status.HTTP_201_CREATED
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
             )
+
+        if request.method == 'DELETE':
+            subscription = Subscribe.objects.filter(
+                user=request.user,
+                author=author
+            )
+            if not subscription.exists():
+                return Response(
+                    {'errors':
+                        ' Невозможно удалить несуществующую подписку.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            subscription.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+        serializer.save()
+        Subscribe.objects.create(user=request.user, author=author)
         return Response(
-            serializer.errors,
-            status=status.HTTP_400_BAD_REQUEST
+            serializer.data,
+            status=status.HTTP_201_CREATED
         )
 
     @action(

@@ -1,5 +1,6 @@
-from django.core.validators import MinValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+
 from ingredients.models import Ingredient
 from tags.models import Tag
 from users.models import User
@@ -32,7 +33,7 @@ class Recipe(models.Model):
     ingredients = models.ManyToManyField(
         Ingredient,
         verbose_name='ингредиенты',
-        through='Ingredients',
+        through='IngredientsInRecipe',
         related_name='recipes',
         help_text='Список продуктов (ингредиентов), используемых в блюде'
     )
@@ -59,7 +60,7 @@ class Recipe(models.Model):
         return self.name
 
 
-class Ingredients(models.Model):
+class IngredientsInRecipe(models.Model):
     """Наша модель ингредиентов в рецепте."""
     recipe = models.ForeignKey(
         Recipe,
@@ -78,7 +79,8 @@ class Ingredients(models.Model):
     amount = models.PositiveIntegerField(
         verbose_name='количество',
         validators=[
-            MinValueValidator(1, message='Введите количество >=1.')
+            MinValueValidator(1, message='Введите количество >=1.'),
+            MaxValueValidator(32000, message='Введите количество <= 50000.')
         ],
         help_text='Количество указанного ингредиента'
     )
