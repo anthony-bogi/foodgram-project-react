@@ -176,8 +176,8 @@ class RecipeCreateUpdateSerializer(RecipeSerializer):
         ingredients_data = self.context['request'].data.get('ingredients', [])
         for ingredient_data in ingredients_data:
             amount = ingredient_data.get('amount')
-            if (int(amount) < AMOUNT_INGREDIENT_MIN_VALUE or
-                    int(amount) > AMOUNT_INGREDIENT_MAX_VALUE):
+            if (int(amount) < AMOUNT_INGREDIENT_MIN_VALUE
+                or int(amount) > AMOUNT_INGREDIENT_MAX_VALUE):
                 raise serializers.ValidationError({
                     'amount':
                     ' Проверьте, что количество каждого ингредиента'
