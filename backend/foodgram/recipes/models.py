@@ -5,6 +5,10 @@ from ingredients.models import Ingredient
 from tags.models import Tag
 from users.models import User
 
+from .constants import (AMOUNT_INGREDIENT_MAX_VALUE,
+                        AMOUNT_INGREDIENT_MIN_VALUE, COOKING_TIME_MAX_VALUE,
+                        COOKING_TIME_MIN_VALUE)
+
 
 class Recipe(models.Model):
     """Наша модель рецепта."""
@@ -46,7 +50,10 @@ class Recipe(models.Model):
     cooking_time = models.PositiveIntegerField(
         verbose_name='время приготовления в минутах',
         validators=[
-            MinValueValidator(1, message='Введите время в минутах >=1.')
+            MinValueValidator(COOKING_TIME_MIN_VALUE,
+                              message='Введите время в минутах >=1.'),
+            MaxValueValidator(COOKING_TIME_MAX_VALUE,
+                              message='Введите время в минутах <=32000.')
         ],
         help_text='Время, необходимое для приготовления блюда в минутах'
     )
@@ -79,8 +86,10 @@ class IngredientsInRecipe(models.Model):
     amount = models.PositiveIntegerField(
         verbose_name='количество',
         validators=[
-            MinValueValidator(1, message='Введите количество >=1.'),
-            MaxValueValidator(32000, message='Введите количество <= 50000.')
+            MinValueValidator(AMOUNT_INGREDIENT_MIN_VALUE,
+                              message='Введите количество >=1.'),
+            MaxValueValidator(AMOUNT_INGREDIENT_MAX_VALUE,
+                              message='Введите количество <= 50000.')
         ],
         help_text='Количество указанного ингредиента'
     )
