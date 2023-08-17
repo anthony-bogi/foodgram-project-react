@@ -268,27 +268,3 @@ uritemplate==4.1.1
 urllib3==2.0.3
 zipp==3.15.0
 ```
-
-## Доступ для проверки проекта:
-
-IP: [84.201.167.51](http://84.201.167.51/)
-
-Доменное имя: [http://foodgrambyanthony.ddns.net/](http://foodgrambyanthony.ddns.net/)
-
-
-Далее для проверки работоспособности сайта через админ-панель заходим по ссылке:
-
-- [http://foodgrambyanthony.ddns.net/admin/](http://foodgrambyanthony.ddns.net/admin/)
-
-или
-
-- [http://84.201.167.51/admin/](http://84.201.167.51/admin/)
-
-Вводим логин (по email) и пароль администратора:
-
-```sh
-email: admin@admin.ru
-password: mainadmin666
-
-# login: admin
-```
